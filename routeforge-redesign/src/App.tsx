@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   MapPin,
   ArrowUpRight,
@@ -8,10 +8,8 @@ import {
   Smartphone,
   Building2,
   PhoneCall,
-  Search,
   ChevronRight,
   PackageCheck,
-  ShieldCheck,
   Sparkles,
   Menu,
   X,
