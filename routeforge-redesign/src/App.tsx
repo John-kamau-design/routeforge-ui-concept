@@ -1,4 +1,3 @@
-import { Showcase3D } from './components/Showcase3D';
 import { useState } from 'react';
 import {
   MapPin,
@@ -21,6 +20,7 @@ import {
   Zap,
   Store,
 } from 'lucide-react';
+import { Showcase3D } from './components/Showcase3D';
 
 const BASE_URL = 'https://routeforge.co.ke';
 
@@ -144,7 +144,6 @@ export function App() {
       {/* FLOATING GLASS NAVIGATION */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07090E]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Brand Logo */}
           <a href={BASE_URL} className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-white">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
               <Navigation className="h-4 w-4 rotate-45" />
@@ -154,7 +153,6 @@ export function App() {
             </span>
           </a>
 
-          {/* Desktop Center Nav Pill */}
           <nav className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-xs font-semibold text-zinc-300 md:flex">
             <a href={`${BASE_URL}/shop`} className="rounded-full px-3.5 py-1.5 transition hover:bg-white/10 hover:text-white">
               Shop
@@ -173,7 +171,6 @@ export function App() {
             </a>
           </nav>
 
-          {/* Desktop Right CTAs */}
           <div className="hidden items-center gap-3 md:flex">
             <a
               href={`${BASE_URL}/login`}
@@ -190,7 +187,6 @@ export function App() {
             </a>
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -201,7 +197,6 @@ export function App() {
           </button>
         </div>
 
-        {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="border-t border-white/10 bg-[#0B0F17] px-4 py-5 md:hidden">
             <div className="flex flex-col space-y-2 text-sm font-medium text-zinc-200">
@@ -223,11 +218,11 @@ export function App() {
       </header>
 
       <main className="relative z-10">
-        {/* HERO SECTION: Interactive Command Center Feel */}
+        {/* HERO SECTION */}
         <section className="mx-auto max-w-7xl px-4 pt-12 pb-16 sm:px-6 lg:px-8 lg:pt-20 lg:pb-24">
-          <div className="grid items-center gap-12 lg:grid-cols-12">
+          <div className="grid items-start gap-12 lg:grid-cols-12">
             {/* Left Pitch */}
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-7 lg:pt-4">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-bold tracking-wider text-emerald-300 uppercase">
                 <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
                 Good finds. Local connections.
@@ -245,7 +240,6 @@ export function App() {
                 Check delivery for your exact address in Kenya and track every step in RouteForge.
               </p>
 
-              {/* CTA Cluster */}
               <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center">
                 <a
                   href={`${BASE_URL}/shop`}
@@ -262,7 +256,6 @@ export function App() {
                 </a>
               </div>
 
-              {/* Micro Metrics / Trust Strip */}
               <div className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:max-w-lg">
                 <div>
                   <p className="text-xl font-extrabold text-white">13</p>
@@ -279,10 +272,9 @@ export function App() {
               </div>
             </div>
 
-            {/* Right Interactive Card: Live Pin & Route Preview */}
+            {/* Right Column: Delivery Pin Simulator + 3D Globe Showcase Below It */}
             <div className="lg:col-span-5">
               <div className="relative rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-7">
-                {/* Top Status Header */}
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div className="flex items-center gap-2.5">
                     <span className="relative flex h-2.5 w-2.5">
@@ -293,19 +285,11 @@ export function App() {
                       Delivery Pin Simulator
                     </span>
                   </div>
-                             <div className="lg:col-span-5">
-              <div className="relative rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-7">
-              
-              </div>
-
-                            <Showcase3D />
-            </div>
                   <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
                     Kenya Network
                   </span>
                 </div>
 
-                {/* Form Controls */}
                 <div className="mt-5 space-y-4">
                   <div>
                     <label htmlFor="hero-county" className="block text-xs font-semibold text-zinc-300">
@@ -342,7 +326,6 @@ export function App() {
                     </div>
                   </div>
 
-                  {/* Live Route Simulation Readout */}
                   <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.07] p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -366,11 +349,14 @@ export function App() {
                   </a>
                 </div>
               </div>
+
+              {/* 7-Item 3D Rotatable Globe Showcase directly below the Delivery Pin Simulator */}
+              <Showcase3D />
             </div>
           </div>
         </section>
 
-        {/* INTERACTIVE LOCAL STORES SHOWCASE (Bento Switcher) */}
+        {/* INTERACTIVE LOCAL STORES SHOWCASE */}
         <section id="stores" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -390,9 +376,7 @@ export function App() {
             </a>
           </div>
 
-          {/* Interactive Store Tabs + Active Spotlight Bento */}
           <div className="mt-8 grid gap-6 lg:grid-cols-12">
-            {/* Left Store Selector Stack */}
             <div className="flex flex-col gap-3 lg:col-span-5">
               {STORES.map((store) => {
                 const isSelected = store.id === activeStore.id;
@@ -427,7 +411,6 @@ export function App() {
               })}
             </div>
 
-            {/* Right Active Store Spotlight Card */}
             <div className="lg:col-span-7">
               <div
                 className={`relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br ${activeStore.accentGradient} bg-[#0C1019] p-7 sm:p-9`}
@@ -451,7 +434,6 @@ export function App() {
                     {activeStore.description}
                   </p>
 
-                  {/* Storefront Highlights Grid */}
                   <div className="mt-7 grid gap-3 sm:grid-cols-3">
                     {activeStore.highlights.map((item) => (
                       <div
@@ -482,7 +464,7 @@ export function App() {
           </div>
         </section>
 
-        {/* HOW IT WORKS: Connected Flow Cards */}
+        {/* HOW IT WORKS */}
         <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-7 sm:p-10">
             <div className="max-w-xl">
@@ -553,7 +535,6 @@ export function App() {
                 </p>
               </div>
 
-              {/* Region Filter Pills */}
               <div className="flex flex-wrap gap-1.5">
                 {REGIONS.map((region) => (
                   <button
@@ -572,7 +553,6 @@ export function App() {
               </div>
             </div>
 
-            {/* County Grid */}
             <div className="mt-7 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {filteredCounties.map((county) => {
                 const active = county.name === selectedCounty;
@@ -616,10 +596,9 @@ export function App() {
           </div>
         </section>
 
-        {/* BENTO ECOSYSTEM: Merchant Ops + Mobile Apps + Direct Support */}
+        {/* BENTO ECOSYSTEM */}
         <section className="mx-auto max-w-7xl px-4 pt-6 pb-20 sm:px-6 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-12">
-            {/* Merchant Workspace Bento (7 Cols) */}
             <div className="flex flex-col justify-between rounded-3xl border border-indigo-400/25 bg-gradient-to-br from-indigo-950/50 via-[#0B0F18] to-[#0B0F18] p-7 sm:p-9 lg:col-span-7">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-3 py-1 text-xs font-bold text-indigo-300">
@@ -635,7 +614,6 @@ export function App() {
                   to us about your service area.
                 </p>
 
-                {/* Mini Dispatch Capabilities Pills */}
                 <div className="mt-6 grid grid-cols-3 gap-2.5">
                   <div className="rounded-xl border border-white/10 bg-black/40 p-3">
                     <Layers className="h-4 w-4 text-indigo-400" />

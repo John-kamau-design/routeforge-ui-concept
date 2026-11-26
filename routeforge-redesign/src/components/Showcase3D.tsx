@@ -1,195 +1,341 @@
-import React, { useState, useRef } from 'react';
-import { ArrowUpRight, Rotate3d, Tag } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Pause,
+  Play,
+  Orbit,
+  RotateCcw,
+  ExternalLink,
+} from 'lucide-react';
 
 const BASE_URL = 'https://routeforge.co.ke';
 
-interface ShowcaseItem {
+interface GlobeItem {
   id: string;
   title: string;
   store: string;
-  badge: string;
-  priceTag: string;
-  imageUrl: string;
+  tag: string;
   href: string;
-  accent: string;
+  imageUrl: string;
 }
 
-const SHOWCASE_ITEMS: ShowcaseItem[] = [
+const GLOBE_ITEMS: GlobeItem[] = [
   {
-    id: 'sneakers',
-    title: 'EU-Sized Street Sneakers',
+    id: 'sneakers-eu',
+    title: 'Sneakers by EU Size',
     store: 'URurban Collection',
-    badge: 'EU 38 – 45',
-    priceTag: 'Kenya-wide Delivery',
-    imageUrl:
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+    tag: 'EU 38–45',
     href: `${BASE_URL}/shop?store=urban-collection`,
-    accent: 'from-indigo-500/30 to-emerald-500/20',
+    imageUrl:
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80',
   },
   {
-    id: 'meals',
-    title: 'Chai, Mandazi & Crispy Chicken',
+    id: 'luwama-meals',
+    title: 'Chai, Mandazi & Chicken',
     store: 'Luwama Fast Food',
-    badge: 'Jomoko, Thika',
-    priceTag: '25–40 min Hot Drop',
-    imageUrl:
-      'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=800&q=80',
+    tag: 'Jomoko, Thika',
     href: `${BASE_URL}/shop?store=luwama-fast-food`,
-    accent: 'from-amber-500/30 to-orange-500/20',
+    imageUrl:
+      'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=700&q=80',
   },
   {
-    id: 'essentials',
-    title: 'Home, Kitchen & Beauty Picks',
+    id: 'zenimart-home',
+    title: 'Home & Kitchen Picks',
     store: 'Zenimart Enterprise',
-    badge: 'Daily Essentials',
-    priceTag: 'Express Basket',
-    imageUrl:
-      'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=800&q=80',
+    tag: 'Household',
     href: `${BASE_URL}/shop?store=zenimart`,
-    accent: 'from-emerald-500/30 to-teal-500/20',
+    imageUrl:
+      'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=700&q=80',
+  },
+  {
+    id: 'caps-bags',
+    title: 'Caps & Everyday Bags',
+    store: 'URurban Collection',
+    tag: 'Street Gear',
+    href: `${BASE_URL}/products`,
+    imageUrl:
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=80',
+  },
+  {
+    id: 'chips-bhajia',
+    title: 'Masala Chips & Bhajia',
+    store: 'Luwama Fast Food',
+    tag: 'Hot Local Drop',
+    href: `${BASE_URL}/shop?store=luwama-fast-food`,
+    imageUrl:
+      'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=700&q=80',
+  },
+  {
+    id: 'beauty-care',
+    title: 'Beauty & Personal Care',
+    store: 'Zenimart Enterprise',
+    tag: 'Essentials',
+    href: `${BASE_URL}/shop?store=zenimart`,
+    imageUrl:
+      'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=700&q=80',
+  },
+  {
+    id: 'full-catalog',
+    title: 'All RouteForge Finds',
+    store: 'Official Shop',
+    tag: '13 Counties',
+    href: `${BASE_URL}/shop`,
+    imageUrl:
+      'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=700&q=80',
   },
 ];
 
+const ITEM_COUNT = GLOBE_ITEMS.length;
+const ANGLE_STEP = 360 / ITEM_COUNT;
+const RADIUS = 175; // 3D orbit radius in pixels
+
 export function Showcase3D() {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [rotate, setRotate] = useState({ x: 0, y: 0 });
-  const [glare, setGlare] = useState({ x: 50, y: 50 });
-  const [isHovering, setIsHovering] = useState(false);
-  const cardRef = useRef<HTMLAnchorElement>(null);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [rotY, setRotY] = useState<number>(0);
+  const [rotX, setRotX] = useState<number>(-8);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  const activeItem = SHOWCASE_ITEMS[selectedIndex];
+  const dragState = useRef<{
+    active: boolean;
+    moved: boolean;
+    startX: number;
+    startY: number;
+    baseRotY: number;
+    baseRotX: number;
+  }>({
+    active: false,
+    moved: false,
+    startX: 0,
+    startY: 0,
+    baseRotY: 0,
+    baseRotX: -8,
+  });
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+  const phaseRef = useRef<number>(0);
 
-    // Max tilt of +/- 16 degrees for crisp 3D depth
-    const rotateX = ((y - centerY) / centerY) * -16;
-    const rotateY = ((x - centerX) / centerX) * 16;
+  // Continuous multi-direction globe rotation when playing & not hovered/dragging
+  useEffect(() => {
+    if (!isPlaying || isHovered || dragState.current.active) return;
 
-    setRotate({ x: rotateX, y: rotateY });
-    setGlare({
-      x: (x / rect.width) * 100,
-      y: (y / rect.height) * 100,
-    });
+    let frameId: number;
+    let lastTime = performance.now();
+
+    const tick = (now: number) => {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      phaseRef.current += dt * 0.65;
+
+      // Spin around Y axis + gentle multi-axis pitch wave like a rotating globe
+      setRotY((prev) => (prev + dt * 22) % 360);
+      setRotX(-8 + Math.sin(phaseRef.current) * 9);
+
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [isPlaying, isHovered]);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragState.current = {
+      active: true,
+      moved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseRotY: rotY,
+      baseRotX: rotX,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setRotate({ x: 0, y: 0 });
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragState.current.active) return;
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      dragState.current.moved = true;
+    }
+
+    setRotY(dragState.current.baseRotY + dx * 0.55);
+    // Clamp vertical tilt so the globe stays readable
+    const nextX = Math.max(-28, Math.min(24, dragState.current.baseRotX - dy * 0.35));
+    setRotX(nextX);
   };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragState.current.active) return;
+    dragState.current.active = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  };
+
+  const handleReset = () => {
+    phaseRef.current = 0;
+    setRotY(0);
+    setRotX(-8);
+    setSelectedIndex(0);
+  };
+
+  const selectedItem = GLOBE_ITEMS[selectedIndex];
 
   return (
     <div className="mt-5 rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-5 shadow-2xl backdrop-blur-xl">
-      {/* Header Row */}
-      <div className="flex items-center justify-between pb-3">
+      {/* Top Bar: Title + Play/Pause + Reset */}
+      <div className="flex items-center justify-between gap-2 pb-3">
         <div className="flex items-center gap-2">
-          <Rotate3d className="h-4 w-4 text-emerald-400" />
+          <Orbit className="h-4 w-4 text-emerald-400" />
           <span className="text-xs font-bold tracking-wider text-zinc-200 uppercase">
-            3D Shop Preview
+            3D Globe Showcase (7)
           </span>
         </div>
-        <span className="text-[11px] font-medium text-zinc-400">
-          Move cursor to rotate · Click to shop
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setIsPlaying((prev) => !prev)}
+            className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/35 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-300 transition hover:bg-emerald-500/25"
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="h-3 w-3" />
+                Pause
+              </>
+            ) : (
+              <>
+                <Play className="h-3 w-3" />
+                Play 3D
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReset}
+            title="Reset 3D angle"
+            className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 p-1.5 text-zinc-300 transition hover:bg-white/10 hover:text-white"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Interactive 3D Globe Stage (Drag anywhere to rotate manually) */}
+      <div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        style={{ perspective: '950px', touchAction: 'none' }}
+        className="relative flex h-60 w-full cursor-grab items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#070A12] active:cursor-grabbing"
+      >
+        {/* Subtle Globe Core Glow */}
+        <div className="pointer-events-none absolute h-36 w-36 rounded-full bg-emerald-500/15 blur-2xl" />
+        <div className="pointer-events-none absolute h-28 w-28 rounded-full border border-emerald-400/15" />
+
+        {/* 3D Orbiting Ring */}
+        <div
+          style={{
+            transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)`,
+            transformStyle: 'preserve-3d',
+          }}
+          className="relative h-32 w-28"
+        >
+          {GLOBE_ITEMS.map((item, idx) => {
+            const angle = idx * ANGLE_STEP;
+            const isSelected = idx === selectedIndex;
+
+            return (
+              <div
+                key={item.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (dragState.current.moved) return;
+                  setSelectedIndex(idx);
+                }}
+                style={{
+                  transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
+                  transformStyle: 'preserve-3d',
+                  backfaceVisibility: 'hidden',
+                }}
+                className={`group absolute inset-0 cursor-pointer overflow-hidden rounded-xl border transition-shadow ${
+                  isSelected
+                    ? 'border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.45)]'
+                    : 'border-white/20 hover:border-emerald-300/70'
+                }`}
+              >
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  draggable={false}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                <div className="absolute right-1.5 bottom-1.5 left-1.5">
+                  <span className="block truncate text-[10px] font-extrabold text-white">
+                    {item.title}
+                  </span>
+                  <span className="block truncate text-[9px] font-semibold text-emerald-300">
+                    {item.store}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Helper Hint */}
+        <span className="pointer-events-none absolute bottom-2 left-3 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-zinc-400">
+          Drag in any direction · Click card to select
         </span>
       </div>
 
-      {/* 3D Perspective Stage */}
-      <div style={{ perspective: '1000px' }} className="py-1">
-        <a
-          ref={cardRef}
-          href={activeItem.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          style={{
-            transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale(${
-              isHovering ? 1.02 : 1
-            })`,
-            transformStyle: 'preserve-3d',
-            transition: isHovering
-              ? 'transform 80ms ease-out'
-              : 'transform 450ms cubic-bezier(0.22, 1, 0.36, 1)',
-          }}
-          className={`group relative block overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br ${activeItem.accent} bg-[#0B0F18] p-4 shadow-xl`}
-        >
-          {/* Dynamic Specular Glare Overlay */}
-          <div
-            className="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{
-              background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.18), transparent 60%)`,
-            }}
-          />
-
-          {/* Floating 3D Image Layer */}
-          <div
-            style={{ transform: 'translateZ(28px)' }}
-            className="relative h-44 w-full overflow-hidden rounded-xl border border-white/10 bg-zinc-900"
-          >
-            <img
-              src={activeItem.imageUrl}
-              alt={activeItem.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#07090E]/90 via-[#07090E]/20 to-transparent" />
-
-            {/* Top Floating Badges */}
-            <div className="absolute top-2.5 right-2.5 left-2.5 flex items-center justify-between">
-              <span className="rounded-lg border border-white/15 bg-black/65 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-md">
-                {activeItem.store}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-400 px-2.5 py-1 text-[11px] font-extrabold text-zinc-950 shadow-md">
-                <Tag className="h-3 w-3" />
-                {activeItem.badge}
-              </span>
-            </div>
-
-            {/* Bottom Floating Caption */}
-            <div className="absolute right-3 bottom-2.5 left-3 flex items-end justify-between">
-              <div>
-                <p className="text-sm font-extrabold text-white">{activeItem.title}</p>
-                <p className="text-[11px] font-medium text-emerald-300">{activeItem.priceTag}</p>
-              </div>
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-zinc-950 shadow-lg transition-transform group-hover:scale-110">
-                <ArrowUpRight className="h-4 w-4" />
-              </span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      {/* Bottom Thumbnail / Item Selector Pills */}
-      <div className="mt-3.5 grid grid-cols-3 gap-2">
-        {SHOWCASE_ITEMS.map((item, idx) => {
+      {/* 7-Item Quick Selector Dots/Chips */}
+      <div className="mt-3 flex items-center justify-between gap-1">
+        {GLOBE_ITEMS.map((item, idx) => {
           const active = idx === selectedIndex;
           return (
             <button
               key={item.id}
               type="button"
-              onClick={() => setSelectedIndex(idx)}
-              className={`flex items-center gap-2 rounded-xl border p-1.5 text-left transition ${
+              onClick={() => {
+                setSelectedIndex(idx);
+                setRotY(-idx * ANGLE_STEP);
+              }}
+              className={`h-2 flex-1 rounded-full transition-all ${
                 active
-                  ? 'border-emerald-400/60 bg-emerald-500/15 text-white'
-                  : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:border-white/25 hover:text-zinc-200'
+                  ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)]'
+                  : 'bg-white/15 hover:bg-white/35'
               }`}
-            >
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="h-7 w-7 shrink-0 rounded-lg object-cover"
-              />
-              <span className="truncate text-[11px] font-bold">
-                {item.store.split(' ')[0]}
-              </span>
-            </button>
+              title={`${item.title} (${item.store})`}
+              aria-label={`Select ${item.title}`}
+            />
           );
         })}
+      </div>
+
+      {/* Selected Item Action Bar with Official RouteForge Page Link */}
+      <div className="mt-3.5 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/40 p-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-extrabold text-white">
+            {selectedItem.title}
+          </p>
+          <p className="truncate text-[11px] text-zinc-400">
+            {selectedItem.store} · <span className="text-emerald-300">{selectedItem.tag}</span>
+          </p>
+        </div>
+
+        <a
+          href={selectedItem.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-400 px-3.5 py-2 text-xs font-extrabold text-zinc-950 transition hover:bg-emerald-300"
+        >
+          <span>Shop Page</span>
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
       </div>
     </div>
   );
