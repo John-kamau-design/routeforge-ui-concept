@@ -272,9 +272,9 @@ export function App() {
               </div>
             </div>
 
-            {/* Right Column: Delivery Pin Simulator + 3D Globe Showcase Below It */}
-            <div className="lg:col-span-5">
-              <div className="relative rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-7">
+            {/* Right Column: Delivery Pin Simulator + Frameless 3D Globe Showcase Below It */}
+            <div className="flex flex-col items-center lg:col-span-5">
+              <div className="relative w-full rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-7">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div className="flex items-center gap-2.5">
                     <span className="relative flex h-2.5 w-2.5">
@@ -350,7 +350,7 @@ export function App() {
                 </div>
               </div>
 
-              {/* 7-Item 3D Rotatable Globe Showcase directly below the Delivery Pin Simulator */}
+              {/* Frameless 7-Item 3D Rotatable Globe Showcase Centered Below */}
               <Showcase3D />
             </div>
           </div>
@@ -647,7 +647,6 @@ export function App() {
               </div>
             </div>
 
-            {/* Mobile Apps + Support Bento (5 Cols) */}
             <div className="flex flex-col justify-between gap-6 lg:col-span-5">
               <div className="rounded-3xl border border-white/10 bg-[#0B0F18] p-7">
                 <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-zinc-200">
@@ -678,7 +677,6 @@ export function App() {
                 </div>
               </div>
 
-              {/* Support Card */}
               <div className="rounded-3xl border border-white/10 bg-[#0B0F18] p-6">
                 <p className="text-xs font-bold text-white">A real person, a little help.</p>
                 <p className="mt-1 text-xs text-zinc-400">

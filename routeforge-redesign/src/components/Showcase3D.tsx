@@ -92,14 +92,12 @@ export function Showcase3D() {
   const touchStartY = useRef<number | null>(null);
   const phaseRef = useRef<number>(0);
 
-  // Sync selected card to whichever item is closest to front-facing
   useEffect(() => {
     const normalized = (((-rotY % 360) + 360) % 360);
     const nearest = Math.round(normalized / ANGLE_STEP) % ITEM_COUNT;
     setSelectedIndex(nearest);
   }, [rotY]);
 
-  // Continuous multi-direction rotation when playing and not hovered
   useEffect(() => {
     if (!isPlaying || isHovered) return;
 
@@ -121,14 +119,12 @@ export function Showcase3D() {
     return () => cancelAnimationFrame(frameId);
   }, [isPlaying, isHovered]);
 
-  // Vertical scroll / swipe-like wheel rotation over the 3D stage
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (Math.abs(e.deltaY) < 2) return;
     setRotY((prev) => prev + e.deltaY * 0.14);
     setRotX((prev) => Math.max(-22, Math.min(18, prev - e.deltaY * 0.03)));
   };
 
-  // Vertical touch swipe (up/down) to rotate the 3D globe
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     touchStartY.current = e.touches[0].clientY;
   };
