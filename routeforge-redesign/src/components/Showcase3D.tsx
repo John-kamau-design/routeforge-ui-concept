@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Pause,
-  Play,
-  Orbit,
-  RotateCcw,
-  ExternalLink,
-} from 'lucide-react';
+import { Pause, Play, ExternalLink } from 'lucide-react';
 
 const BASE_URL = 'https://routeforge.co.ke';
 
@@ -86,36 +80,28 @@ const GLOBE_ITEMS: GlobeItem[] = [
 
 const ITEM_COUNT = GLOBE_ITEMS.length;
 const ANGLE_STEP = 360 / ITEM_COUNT;
-const RADIUS = 175; // 3D orbit radius in pixels
+const RADIUS = 170;
 
 export function Showcase3D() {
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [rotY, setRotY] = useState<number>(0);
-  const [rotX, setRotX] = useState<number>(-8);
+  const [rotX, setRotX] = useState<number>(-6);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  const dragState = useRef<{
-    active: boolean;
-    moved: boolean;
-    startX: number;
-    startY: number;
-    baseRotY: number;
-    baseRotX: number;
-  }>({
-    active: false,
-    moved: false,
-    startX: 0,
-    startY: 0,
-    baseRotY: 0,
-    baseRotX: -8,
-  });
-
+  const touchStartY = useRef<number | null>(null);
   const phaseRef = useRef<number>(0);
 
-  // Continuous multi-direction globe rotation when playing & not hovered/dragging
+  // Sync selected card to whichever item is closest to front-facing
   useEffect(() => {
-    if (!isPlaying || isHovered || dragState.current.active) return;
+    const normalized = (((-rotY % 360) + 360) % 360);
+    const nearest = Math.round(normalized / ANGLE_STEP) % ITEM_COUNT;
+    setSelectedIndex(nearest);
+  }, [rotY]);
+
+  // Continuous multi-direction rotation when playing and not hovered
+  useEffect(() => {
+    if (!isPlaying || isHovered) return;
 
     let frameId: number;
     let lastTime = performance.now();
@@ -123,11 +109,10 @@ export function Showcase3D() {
     const tick = (now: number) => {
       const dt = (now - lastTime) / 1000;
       lastTime = now;
-      phaseRef.current += dt * 0.65;
+      phaseRef.current += dt * 0.6;
 
-      // Spin around Y axis + gentle multi-axis pitch wave like a rotating globe
-      setRotY((prev) => (prev + dt * 22) % 360);
-      setRotX(-8 + Math.sin(phaseRef.current) * 9);
+      setRotY((prev) => (prev + dt * 20) % 360);
+      setRotX(-6 + Math.sin(phaseRef.current) * 8);
 
       frameId = requestAnimationFrame(tick);
     };
@@ -136,106 +121,71 @@ export function Showcase3D() {
     return () => cancelAnimationFrame(frameId);
   }, [isPlaying, isHovered]);
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragState.current = {
-      active: true,
-      moved: false,
-      startX: e.clientX,
-      startY: e.clientY,
-      baseRotY: rotY,
-      baseRotX: rotX,
-    };
-    e.currentTarget.setPointerCapture(e.pointerId);
+  // Vertical scroll / swipe-like wheel rotation over the 3D stage
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (Math.abs(e.deltaY) < 2) return;
+    setRotY((prev) => prev + e.deltaY * 0.14);
+    setRotX((prev) => Math.max(-22, Math.min(18, prev - e.deltaY * 0.03)));
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragState.current.active) return;
-    const dx = e.clientX - dragState.current.startX;
-    const dy = e.clientY - dragState.current.startY;
-
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-      dragState.current.moved = true;
-    }
-
-    setRotY(dragState.current.baseRotY + dx * 0.55);
-    // Clamp vertical tilt so the globe stays readable
-    const nextX = Math.max(-28, Math.min(24, dragState.current.baseRotX - dy * 0.35));
-    setRotX(nextX);
+  // Vertical touch swipe (up/down) to rotate the 3D globe
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartY.current = e.touches[0].clientY;
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragState.current.active) return;
-    dragState.current.active = false;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    }
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartY.current === null) return;
+    const currentY = e.touches[0].clientY;
+    const deltaY = touchStartY.current - currentY;
+    touchStartY.current = currentY;
+
+    setRotY((prev) => prev + deltaY * 0.65);
+    setRotX((prev) => Math.max(-22, Math.min(18, prev - deltaY * 0.12)));
   };
 
-  const handleReset = () => {
-    phaseRef.current = 0;
-    setRotY(0);
-    setRotX(-8);
-    setSelectedIndex(0);
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
   };
 
   const selectedItem = GLOBE_ITEMS[selectedIndex];
 
   return (
-    <div className="mt-5 rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-5 shadow-2xl backdrop-blur-xl">
-      {/* Top Bar: Title + Play/Pause + Reset */}
-      <div className="flex items-center justify-between gap-2 pb-3">
-        <div className="flex items-center gap-2">
-          <Orbit className="h-4 w-4 text-emerald-400" />
-          <span className="text-xs font-bold tracking-wider text-zinc-200 uppercase">
-            3D Globe Showcase (7)
-          </span>
-        </div>
+    <div className="mx-auto mt-6 flex w-full max-w-md flex-col items-center">
+      {/* Minimal Floating Controls: Play/Pause + Active Item Link */}
+      <div className="mb-2 flex w-full items-center justify-between px-1">
+        <button
+          type="button"
+          onClick={() => setIsPlaying((prev) => !prev)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[11px] font-bold text-emerald-300 backdrop-blur-md transition hover:bg-white/10"
+        >
+          {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+          {isPlaying ? 'Pause' : 'Play'}
+        </button>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setIsPlaying((prev) => !prev)}
-            className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/35 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-300 transition hover:bg-emerald-500/25"
-          >
-            {isPlaying ? (
-              <>
-                <Pause className="h-3 w-3" />
-                Pause
-              </>
-            ) : (
-              <>
-                <Play className="h-3 w-3" />
-                Play 3D
-              </>
-            )}
-          </button>
+        <span className="text-[11px] text-zinc-400">Swipe / scroll up or down</span>
 
-          <button
-            type="button"
-            onClick={handleReset}
-            title="Reset 3D angle"
-            className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 p-1.5 text-zinc-300 transition hover:bg-white/10 hover:text-white"
-          >
-            <RotateCcw className="h-3 w-3" />
-          </button>
-        </div>
+        <a
+          href={selectedItem.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 rounded-full bg-emerald-400 px-3 py-1 text-[11px] font-extrabold text-zinc-950 transition hover:bg-emerald-300"
+        >
+          <span>Shop</span>
+          <ExternalLink className="h-3 w-3" />
+        </a>
       </div>
 
-      {/* Interactive 3D Globe Stage (Drag anywhere to rotate manually) */}
+      {/* Frameless 3D Globe Stage */}
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        style={{ perspective: '950px', touchAction: 'none' }}
-        className="relative flex h-60 w-full cursor-grab items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#070A12] active:cursor-grabbing"
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ perspective: '950px' }}
+        className="relative flex h-60 w-full items-center justify-center overflow-visible select-none"
       >
-        {/* Subtle Globe Core Glow */}
-        <div className="pointer-events-none absolute h-36 w-36 rounded-full bg-emerald-500/15 blur-2xl" />
-        <div className="pointer-events-none absolute h-28 w-28 rounded-full border border-emerald-400/15" />
-
-        {/* 3D Orbiting Ring */}
         <div
           style={{
             transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)`,
@@ -248,21 +198,20 @@ export function Showcase3D() {
             const isSelected = idx === selectedIndex;
 
             return (
-              <div
+              <a
                 key={item.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (dragState.current.moved) return;
-                  setSelectedIndex(idx);
-                }}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setSelectedIndex(idx)}
                 style={{
                   transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
                   transformStyle: 'preserve-3d',
                   backfaceVisibility: 'hidden',
                 }}
-                className={`group absolute inset-0 cursor-pointer overflow-hidden rounded-xl border transition-shadow ${
+                className={`absolute inset-0 overflow-hidden rounded-xl border transition-shadow ${
                   isSelected
-                    ? 'border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.45)]'
+                    ? 'border-emerald-400 shadow-[0_0_24px_rgba(52,211,153,0.45)]'
                     : 'border-white/20 hover:border-emerald-300/70'
                 }`}
               >
@@ -272,7 +221,7 @@ export function Showcase3D() {
                   draggable={false}
                   className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
                 <div className="absolute right-1.5 bottom-1.5 left-1.5">
                   <span className="block truncate text-[10px] font-extrabold text-white">
                     {item.title}
@@ -281,62 +230,17 @@ export function Showcase3D() {
                     {item.store}
                   </span>
                 </div>
-              </div>
+              </a>
             );
           })}
         </div>
-
-        {/* Helper Hint */}
-        <span className="pointer-events-none absolute bottom-2 left-3 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-zinc-400">
-          Drag in any direction · Click card to select
-        </span>
       </div>
 
-      {/* 7-Item Quick Selector Dots/Chips */}
-      <div className="mt-3 flex items-center justify-between gap-1">
-        {GLOBE_ITEMS.map((item, idx) => {
-          const active = idx === selectedIndex;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                setSelectedIndex(idx);
-                setRotY(-idx * ANGLE_STEP);
-              }}
-              className={`h-2 flex-1 rounded-full transition-all ${
-                active
-                  ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)]'
-                  : 'bg-white/15 hover:bg-white/35'
-              }`}
-              title={`${item.title} (${item.store})`}
-              aria-label={`Select ${item.title}`}
-            />
-          );
-        })}
-      </div>
-
-      {/* Selected Item Action Bar with Official RouteForge Page Link */}
-      <div className="mt-3.5 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/40 p-3">
-        <div className="min-w-0">
-          <p className="truncate text-xs font-extrabold text-white">
-            {selectedItem.title}
-          </p>
-          <p className="truncate text-[11px] text-zinc-400">
-            {selectedItem.store} · <span className="text-emerald-300">{selectedItem.tag}</span>
-          </p>
-        </div>
-
-        <a
-          href={selectedItem.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-400 px-3.5 py-2 text-xs font-extrabold text-zinc-950 transition hover:bg-emerald-300"
-        >
-          <span>Shop Page</span>
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
-      </div>
+      {/* Subtle Centered Caption */}
+      <p className="mt-1 text-center text-xs font-bold text-zinc-200">
+        {selectedItem.title}{' '}
+        <span className="font-normal text-zinc-400">· {selectedItem.store}</span>
+      </p>
     </div>
   );
 }
