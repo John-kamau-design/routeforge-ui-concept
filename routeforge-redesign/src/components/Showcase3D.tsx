@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pause, Play, ExternalLink } from 'lucide-react';
+import { Pause, Play, ExternalLink, RotateCcw } from 'lucide-react';
 
 const BASE_URL = 'https://routeforge.co.ke';
 
@@ -80,26 +80,25 @@ const GLOBE_ITEMS: GlobeItem[] = [
 
 const ITEM_COUNT = GLOBE_ITEMS.length;
 const ANGLE_STEP = 360 / ITEM_COUNT;
-const RADIUS = 210;
+const RADIUS_X = 210;
+const RADIUS_Z = 140;
 
 export function Showcase3D() {
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [rotY, setRotY] = useState<number>(0);
-  const [rotX, setRotX] = useState<number>(-8);
+  const [tiltX, setTiltX] = useState<number>(0.18);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const phaseRef = useRef<number>(0);
 
-  // Highlight whichever item is closest to front-facing
   useEffect(() => {
     const normalized = (((-rotY % 360) + 360) % 360);
     const nearest = Math.round(normalized / ANGLE_STEP) % ITEM_COUNT;
     setSelectedIndex(nearest);
   }, [rotY]);
 
-  // Continuous multi-direction rotation when playing and not hovered
   useEffect(() => {
     if (!isPlaying || isHovered) return;
 
@@ -109,10 +108,10 @@ export function Showcase3D() {
     const tick = (now: number) => {
       const dt = (now - lastTime) / 1000;
       lastTime = now;
-      phaseRef.current += dt * 0.65;
+      phaseRef.current += dt * 0.55;
 
-      setRotY((prev) => (prev + dt * 20) % 360);
-      setRotX(-8 + Math.sin(phaseRef.current) * 10);
+      setRotY((prev) => (prev + dt * 22) % 360);
+      setTiltX(0.18 + Math.sin(phaseRef.current) * 0.14);
 
       frameId = requestAnimationFrame(tick);
     };
@@ -121,19 +120,14 @@ export function Showcase3D() {
     return () => cancelAnimationFrame(frameId);
   }, [isPlaying, isHovered]);
 
-  // Mouse wheel scrolling in any direction (horizontal deltaX + vertical deltaY)
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    const combinedDelta = e.deltaY + e.deltaX;
-    if (Math.abs(combinedDelta) < 1) return;
+    const move = e.deltaY + e.deltaX;
+    if (Math.abs(move) < 1) return;
 
-    setRotY((prev) => prev + (e.deltaY * 0.16 + e.deltaX * 0.18));
-    setRotX((prev) => {
-      const next = prev - e.deltaY * 0.04;
-      return Math.max(-28, Math.min(24, next));
-    });
+    setRotY((prev) => prev + e.deltaY * 0.18 + e.deltaX * 0.22);
+    setTiltX((prev) => Math.max(-0.45, Math.min(0.45, prev - e.deltaY * 0.0006)));
   };
 
-  // Multi-directional touch swipe
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     touchStart.current = {
       x: e.touches[0].clientX,
@@ -149,28 +143,46 @@ export function Showcase3D() {
     const dy = touchStart.current.y - currentY;
     touchStart.current = { x: currentX, y: currentY };
 
-    setRotY((prev) => prev + dy * 0.65 - dx * 0.45);
-    setRotX((prev) => Math.max(-28, Math.min(24, prev - dy * 0.14)));
+    setRotY((prev) => prev + dy * 0.7 - dx * 0.55);
+    setTiltX((prev) => Math.max(-0.45, Math.min(0.45, prev - dy * 0.0018)));
   };
 
   const handleTouchEnd = () => {
     touchStart.current = null;
   };
 
+  const handleReset = () => {
+    phaseRef.current = 0;
+    setRotY(0);
+    setTiltX(0.18);
+    setSelectedIndex(0);
+  };
+
   const selectedItem = GLOBE_ITEMS[selectedIndex];
 
   return (
-    <div className="mx-auto mt-4 flex w-full max-w-4xl flex-col items-center justify-center px-4 py-6">
-      {/* Minimal Floating Controls: Play/Pause + Active Item Link */}
-      <div className="mb-3 flex w-full max-w-md items-center justify-between">
-        <button
-          type="button"
-          onClick={() => setIsPlaying((prev) => !prev)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[11px] font-bold text-emerald-300 backdrop-blur-md transition hover:bg-white/10"
-        >
-          {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-          {isPlaying ? 'Pause' : 'Play'}
-        </button>
+    <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center px-4 py-4">
+      {/* Controls Bar */}
+      <div className="mb-3 flex w-full max-w-md items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setIsPlaying((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[11px] font-bold text-emerald-300 backdrop-blur-md transition hover:bg-white/10"
+          >
+            {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            {isPlaying ? 'Pause' : 'Play'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReset}
+            aria-label="Reset rotation"
+            className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.05] p-1 text-zinc-300 transition hover:bg-white/10 hover:text-white"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </button>
+        </div>
 
         <span className="text-[11px] text-zinc-400">Scroll or swipe in any direction</span>
 
@@ -185,7 +197,7 @@ export function Showcase3D() {
         </a>
       </div>
 
-      {/* Centered Frameless 3D Globe Stage (All 7 cards visible front-to-back) */}
+      {/* Centered Free-Roaming 3D Globe Stage */}
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -193,24 +205,20 @@ export function Showcase3D() {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ perspective: '1100px' }}
         className="relative flex h-72 w-full items-center justify-center overflow-visible select-none"
       >
-        <div
-          style={{
-            transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)`,
-            transformStyle: 'preserve-3d',
-          }}
-          className="relative h-36 w-32"
-        >
+        <div className="relative flex h-full w-full items-center justify-center">
           {GLOBE_ITEMS.map((item, idx) => {
-            const angle = idx * ANGLE_STEP;
-            const totalAngleRad = ((angle + rotY) * Math.PI) / 180;
-            // depthFactor is 1 at front (+Z) and -1 at back (-Z)
-            const depthFactor = Math.cos(totalAngleRad);
+            const theta = ((idx * ANGLE_STEP + rotY) * Math.PI) / 180;
+            const x = Math.sin(theta) * RADIUS_X;
+            const z = Math.cos(theta) * RADIUS_Z; // +RADIUS_Z = front, -RADIUS_Z = back
+            const y = Math.sin(theta) * RADIUS_Z * tiltX;
+
+            const normalizedDepth = (z + RADIUS_Z) / (2 * RADIUS_Z); // 0 (back) to 1 (front)
+            const scale = 0.68 + normalizedDepth * 0.42;
+            const opacity = 0.52 + normalizedDepth * 0.48;
+            const zIndex = Math.round(10 + normalizedDepth * 40);
             const isSelected = idx === selectedIndex;
-            const cardOpacity = 0.45 + ((depthFactor + 1) / 2) * 0.55;
-            const zIndex = Math.round((depthFactor + 1) * 50);
 
             return (
               <a
@@ -220,12 +228,11 @@ export function Showcase3D() {
                 rel="noopener noreferrer"
                 onClick={() => setSelectedIndex(idx)}
                 style={{
-                  transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
-                  transformStyle: 'preserve-3d',
-                  opacity: cardOpacity,
+                  transform: `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0px) scale(${scale.toFixed(3)})`,
+                  opacity,
                   zIndex,
                 }}
-                className={`absolute inset-0 overflow-hidden rounded-xl border transition-shadow ${
+                className={`absolute h-36 w-28 overflow-hidden rounded-xl border transition-shadow duration-150 ${
                   isSelected
                     ? 'border-emerald-400 shadow-[0_0_24px_rgba(52,211,153,0.45)]'
                     : 'border-white/25 hover:border-emerald-300/80'
@@ -252,8 +259,8 @@ export function Showcase3D() {
         </div>
       </div>
 
-      {/* Centered Active Item Caption */}
-      <p className="mt-2 text-center text-xs font-bold text-zinc-200">
+      {/* Centered Active Item Label */}
+      <p className="mt-1 text-center text-xs font-bold text-zinc-200">
         {selectedItem.title}{' '}
         <span className="font-normal text-zinc-400">· {selectedItem.store}</span>
       </p>

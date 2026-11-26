@@ -19,6 +19,7 @@ import {
   Layers,
   Zap,
   Store,
+  Route,
 } from 'lucide-react';
 import { Showcase3D } from './components/Showcase3D';
 
@@ -133,16 +134,16 @@ export function App() {
 
   return (
     <div className="relative min-h-screen bg-[#07090E] text-zinc-100 selection:bg-emerald-400 selection:text-zinc-950">
-      {/* Ambient Background Glows + Architectural Grid */}
+      {/* Ambient Dispatch Grid + Route Glows */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="bg-grid-pattern absolute inset-0 opacity-100" />
-        <div className="absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-emerald-500/12 blur-[130px]" />
-        <div className="absolute top-[38%] -left-40 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[120px]" />
-        <div className="absolute right-0 bottom-0 h-[400px] w-[500px] rounded-full bg-emerald-500/8 blur-[130px]" />
+        <div className="absolute -top-44 left-1/2 h-[540px] w-[860px] -translate-x-1/2 rounded-full bg-emerald-500/12 blur-[130px]" />
+        <div className="absolute top-[40%] -left-40 h-[420px] w-[420px] rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute right-0 bottom-0 h-[420px] w-[520px] rounded-full bg-emerald-500/8 blur-[130px]" />
       </div>
 
-      {/* FLOATING GLASS NAVIGATION */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07090E]/80 backdrop-blur-xl">
+      {/* TOP NAVIGATION */}
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07090E]/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <a href={BASE_URL} className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-white">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
@@ -219,28 +220,28 @@ export function App() {
 
       <main className="relative z-10">
         {/* HERO SECTION */}
-        <section className="mx-auto max-w-7xl px-4 pt-12 pb-10 sm:px-6 lg:px-8 lg:pt-20 lg:pb-12">
-          <div className="grid items-center gap-12 lg:grid-cols-12">
-            {/* Left Pitch */}
+        <section className="mx-auto max-w-7xl px-4 pt-12 pb-8 sm:px-6 lg:px-8 lg:pt-16 lg:pb-10">
+          <div className="grid items-center gap-10 lg:grid-cols-12">
+            {/* Left Delivery Pitch */}
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-bold tracking-wider text-emerald-300 uppercase">
-                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                Good finds. Local connections.
+                <Route className="h-3.5 w-3.5 text-emerald-400" />
+                Verified Local Dispatch · Kenya
               </div>
 
-              <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:leading-[1.06]">
+              <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-white sm:text-6xl lg:leading-[1.06]">
                 Local shops in Kenya,{' '}
                 <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-indigo-300 bg-clip-text text-transparent">
                   delivered to your pin.
                 </span>
               </h1>
 
-              <p className="mt-5 max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg">
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-300 sm:text-lg">
                 Shop food, sneakers, accessories, beauty and home essentials from verified local stores.
                 Check delivery for your exact address in Kenya and track every step in RouteForge.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center">
+              <div className="mt-7 flex flex-col gap-3.5 sm:flex-row sm:items-center">
                 <a
                   href={`${BASE_URL}/shop`}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-7 py-4 text-sm font-extrabold text-zinc-950 shadow-[0_0_35px_rgba(52,211,153,0.28)] transition hover:-translate-y-0.5 hover:bg-emerald-300"
@@ -256,18 +257,18 @@ export function App() {
                 </a>
               </div>
 
-              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:max-w-lg">
+              <div className="mt-9 grid grid-cols-3 gap-4 border-t border-white/10 pt-5 sm:max-w-lg">
                 <div>
                   <p className="text-xl font-extrabold text-white">13</p>
                   <p className="text-xs text-zinc-400">Active Counties</p>
                 </div>
                 <div>
-                  <p className="text-xl font-extrabold text-emerald-400">Live</p>
-                  <p className="text-xs text-zinc-400">Pin-Based Rates</p>
+                  <p className="text-xl font-extrabold text-emerald-400">Pin-Exact</p>
+                  <p className="text-xs text-zinc-400">Dispatch Routing</p>
                 </div>
                 <div>
                   <p className="text-xl font-extrabold text-white">Web + App</p>
-                  <p className="text-xs text-zinc-400">Unified Account</p>
+                  <p className="text-xs text-zinc-400">Live Order Sync</p>
                 </div>
               </div>
             </div>
@@ -286,7 +287,7 @@ export function App() {
                     </span>
                   </div>
                   <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
-                    Kenya Network
+                    Dispatch Ready
                   </span>
                 </div>
 
@@ -352,14 +353,14 @@ export function App() {
             </div>
           </div>
 
-          {/* Centered 3D Globe Showcase in its spot right below the Hero */}
-          <div className="mt-6 flex w-full justify-center">
+          {/* Centered Multi-Directional 3D Globe Showcase */}
+          <div className="mt-8 flex w-full justify-center">
             <Showcase3D />
           </div>
         </section>
 
         {/* INTERACTIVE LOCAL STORES SHOWCASE */}
-        <section id="stores" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <section id="stores" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="text-xs font-bold tracking-wider text-emerald-400 uppercase">
