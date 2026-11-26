@@ -1,3 +1,4 @@
+import { Showcase3D } from './components/Showcase3D';
 import { useState } from 'react';
 import {
   MapPin,
@@ -292,6 +293,13 @@ export function App() {
                       Delivery Pin Simulator
                     </span>
                   </div>
+                             <div className="lg:col-span-5">
+              <div className="relative rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-7">
+              
+              </div>
+
+                            <Showcase3D />
+            </div>
                   <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
                     Kenya Network
                   </span>
