@@ -124,7 +124,7 @@ export function Showcase3D() {
     const move = e.deltaY + e.deltaX;
     if (Math.abs(move) < 1) return;
 
-    setRotY((prev) => prev + e.deltaY * 0.18 + e.deltaX * 0.22);
+    setRotY((prev) => prev - e.deltaY * 0.18 - e.deltaX * 0.22);
     setTiltX((prev) => Math.max(-0.45, Math.min(0.45, prev - e.deltaY * 0.0006)));
   };
 
@@ -143,7 +143,7 @@ export function Showcase3D() {
     const dy = touchStart.current.y - currentY;
     touchStart.current = { x: currentX, y: currentY };
 
-    setRotY((prev) => prev + dy * 0.7 - dx * 0.55);
+    setRotY((prev) => prev - dy * 0.7 + dx * 0.55);
     setTiltX((prev) => Math.max(-0.45, Math.min(0.45, prev - dy * 0.0018)));
   };
 
