@@ -219,10 +219,10 @@ export function App() {
 
       <main className="relative z-10">
         {/* HERO SECTION */}
-        <section className="mx-auto max-w-7xl px-4 pt-12 pb-16 sm:px-6 lg:px-8 lg:pt-20 lg:pb-24">
-          <div className="grid items-start gap-12 lg:grid-cols-12">
+        <section className="mx-auto max-w-7xl px-4 pt-12 pb-10 sm:px-6 lg:px-8 lg:pt-20 lg:pb-12">
+          <div className="grid items-center gap-12 lg:grid-cols-12">
             {/* Left Pitch */}
-            <div className="lg:col-span-7 lg:pt-4">
+            <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-bold tracking-wider text-emerald-300 uppercase">
                 <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
                 Good finds. Local connections.
@@ -272,8 +272,8 @@ export function App() {
               </div>
             </div>
 
-            {/* Right Column: Delivery Pin Simulator + Frameless 3D Globe Showcase Below It */}
-            <div className="flex flex-col items-center lg:col-span-5">
+            {/* Right Column: Delivery Pin Simulator */}
+            <div className="lg:col-span-5">
               <div className="relative w-full rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-7">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div className="flex items-center gap-2.5">
@@ -349,10 +349,12 @@ export function App() {
                   </a>
                 </div>
               </div>
-
-              {/* Frameless 7-Item 3D Rotatable Globe Showcase Centered Below */}
-              <Showcase3D />
             </div>
+          </div>
+
+          {/* Centered 3D Globe Showcase in its spot right below the Hero */}
+          <div className="mt-6 flex w-full justify-center">
+            <Showcase3D />
           </div>
         </section>
 

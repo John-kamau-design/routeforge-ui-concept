@@ -80,24 +80,26 @@ const GLOBE_ITEMS: GlobeItem[] = [
 
 const ITEM_COUNT = GLOBE_ITEMS.length;
 const ANGLE_STEP = 360 / ITEM_COUNT;
-const RADIUS = 170;
+const RADIUS = 210;
 
 export function Showcase3D() {
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [rotY, setRotY] = useState<number>(0);
-  const [rotX, setRotX] = useState<number>(-6);
+  const [rotX, setRotX] = useState<number>(-8);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  const touchStartY = useRef<number | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const phaseRef = useRef<number>(0);
 
+  // Highlight whichever item is closest to front-facing
   useEffect(() => {
     const normalized = (((-rotY % 360) + 360) % 360);
     const nearest = Math.round(normalized / ANGLE_STEP) % ITEM_COUNT;
     setSelectedIndex(nearest);
   }, [rotY]);
 
+  // Continuous multi-direction rotation when playing and not hovered
   useEffect(() => {
     if (!isPlaying || isHovered) return;
 
@@ -107,10 +109,10 @@ export function Showcase3D() {
     const tick = (now: number) => {
       const dt = (now - lastTime) / 1000;
       lastTime = now;
-      phaseRef.current += dt * 0.6;
+      phaseRef.current += dt * 0.65;
 
       setRotY((prev) => (prev + dt * 20) % 360);
-      setRotX(-6 + Math.sin(phaseRef.current) * 8);
+      setRotX(-8 + Math.sin(phaseRef.current) * 10);
 
       frameId = requestAnimationFrame(tick);
     };
@@ -119,36 +121,48 @@ export function Showcase3D() {
     return () => cancelAnimationFrame(frameId);
   }, [isPlaying, isHovered]);
 
+  // Mouse wheel scrolling in any direction (horizontal deltaX + vertical deltaY)
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (Math.abs(e.deltaY) < 2) return;
-    setRotY((prev) => prev + e.deltaY * 0.14);
-    setRotX((prev) => Math.max(-22, Math.min(18, prev - e.deltaY * 0.03)));
+    const combinedDelta = e.deltaY + e.deltaX;
+    if (Math.abs(combinedDelta) < 1) return;
+
+    setRotY((prev) => prev + (e.deltaY * 0.16 + e.deltaX * 0.18));
+    setRotX((prev) => {
+      const next = prev - e.deltaY * 0.04;
+      return Math.max(-28, Math.min(24, next));
+    });
   };
 
+  // Multi-directional touch swipe
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchStartY.current = e.touches[0].clientY;
+    touchStart.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartY.current === null) return;
+    if (!touchStart.current) return;
+    const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
-    const deltaY = touchStartY.current - currentY;
-    touchStartY.current = currentY;
+    const dx = currentX - touchStart.current.x;
+    const dy = touchStart.current.y - currentY;
+    touchStart.current = { x: currentX, y: currentY };
 
-    setRotY((prev) => prev + deltaY * 0.65);
-    setRotX((prev) => Math.max(-22, Math.min(18, prev - deltaY * 0.12)));
+    setRotY((prev) => prev + dy * 0.65 - dx * 0.45);
+    setRotX((prev) => Math.max(-28, Math.min(24, prev - dy * 0.14)));
   };
 
   const handleTouchEnd = () => {
-    touchStartY.current = null;
+    touchStart.current = null;
   };
 
   const selectedItem = GLOBE_ITEMS[selectedIndex];
 
   return (
-    <div className="mx-auto mt-6 flex w-full max-w-md flex-col items-center">
+    <div className="mx-auto mt-4 flex w-full max-w-4xl flex-col items-center justify-center px-4 py-6">
       {/* Minimal Floating Controls: Play/Pause + Active Item Link */}
-      <div className="mb-2 flex w-full items-center justify-between px-1">
+      <div className="mb-3 flex w-full max-w-md items-center justify-between">
         <button
           type="button"
           onClick={() => setIsPlaying((prev) => !prev)}
@@ -158,7 +172,7 @@ export function Showcase3D() {
           {isPlaying ? 'Pause' : 'Play'}
         </button>
 
-        <span className="text-[11px] text-zinc-400">Swipe / scroll up or down</span>
+        <span className="text-[11px] text-zinc-400">Scroll or swipe in any direction</span>
 
         <a
           href={selectedItem.href}
@@ -171,7 +185,7 @@ export function Showcase3D() {
         </a>
       </div>
 
-      {/* Frameless 3D Globe Stage */}
+      {/* Centered Frameless 3D Globe Stage (All 7 cards visible front-to-back) */}
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -179,19 +193,24 @@ export function Showcase3D() {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ perspective: '950px' }}
-        className="relative flex h-60 w-full items-center justify-center overflow-visible select-none"
+        style={{ perspective: '1100px' }}
+        className="relative flex h-72 w-full items-center justify-center overflow-visible select-none"
       >
         <div
           style={{
             transform: `rotateX(${rotX}deg) rotateY(${rotY}deg)`,
             transformStyle: 'preserve-3d',
           }}
-          className="relative h-32 w-28"
+          className="relative h-36 w-32"
         >
           {GLOBE_ITEMS.map((item, idx) => {
             const angle = idx * ANGLE_STEP;
+            const totalAngleRad = ((angle + rotY) * Math.PI) / 180;
+            // depthFactor is 1 at front (+Z) and -1 at back (-Z)
+            const depthFactor = Math.cos(totalAngleRad);
             const isSelected = idx === selectedIndex;
+            const cardOpacity = 0.45 + ((depthFactor + 1) / 2) * 0.55;
+            const zIndex = Math.round((depthFactor + 1) * 50);
 
             return (
               <a
@@ -203,12 +222,13 @@ export function Showcase3D() {
                 style={{
                   transform: `rotateY(${angle}deg) translateZ(${RADIUS}px)`,
                   transformStyle: 'preserve-3d',
-                  backfaceVisibility: 'hidden',
+                  opacity: cardOpacity,
+                  zIndex,
                 }}
                 className={`absolute inset-0 overflow-hidden rounded-xl border transition-shadow ${
                   isSelected
                     ? 'border-emerald-400 shadow-[0_0_24px_rgba(52,211,153,0.45)]'
-                    : 'border-white/20 hover:border-emerald-300/70'
+                    : 'border-white/25 hover:border-emerald-300/80'
                 }`}
               >
                 <img
@@ -217,7 +237,7 @@ export function Showcase3D() {
                   draggable={false}
                   className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                 <div className="absolute right-1.5 bottom-1.5 left-1.5">
                   <span className="block truncate text-[10px] font-extrabold text-white">
                     {item.title}
@@ -232,8 +252,8 @@ export function Showcase3D() {
         </div>
       </div>
 
-      {/* Subtle Centered Caption */}
-      <p className="mt-1 text-center text-xs font-bold text-zinc-200">
+      {/* Centered Active Item Caption */}
+      <p className="mt-2 text-center text-xs font-bold text-zinc-200">
         {selectedItem.title}{' '}
         <span className="font-normal text-zinc-400">· {selectedItem.store}</span>
       </p>
