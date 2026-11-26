@@ -10,7 +10,6 @@ import {
   PhoneCall,
   ChevronRight,
   PackageCheck,
-  Sparkles,
   Menu,
   X,
   Download,
